@@ -1,16 +1,33 @@
 /*Los grafos de este programa se construyen con hechos para las aristas
+
 aristas(x,y,p) :- donde x es el nodo de inicio de la arista
                   y es el nodo final de la arista
                   p es el peso de la arista
 
 Por defecto, el programa trata al grafo como no dirigido. Para habilitarlo para
 grafos dirigidos, basta con comentar el segundo predicado de la regla "conexion"*/
-arista(a,b,2).
-arista(a,c,5).
 
-arista(b,d,3).
-arista(c,d,4).
 
+arista(a,b,4).
+arista(a,d,6).
+arista(a,g,7).
+arista(a,f,4).
+arista(b,d,9).
+arista(b,c,2).
+arista(c,d,6).
+arista(c,e,1).
+arista(c,f,4).
+arista(g,f,10).
+arista(f,e,3).
+
+
+/*
+arista(a,c,2).
+arista(a,e,3).
+arista(b,e,9).
+arista(d,b,8).
+arista(c,d,3).
+*/
 
 conexion(X,Y,Z) :- arista(X,Y,Z).
 conexion(X,Y,Z) :- arista(Y,X,Z). % <---- Comentar esta linea para grafos dirigidos
@@ -88,4 +105,20 @@ Un circuito puede interpretarse como un rastro cerrado.
 circuito(A,L,) :- A es el nodo de inicio y final,
                  L es la lista que contiene el circuito,
                  P es el peso del circuito.*/
-circuito(A,[A|L],P) :- conexion(A,X,Z), rastro(X,A,L,[(A,X,P)],Ps), P is Ps + Z.
+circuito(A,[A|L],P) :- conexion(A,X,Z), rastro(X,A,L,[(A,X,Z)],Ps), P is Ps + Z.
+
+
+cHamiltoniano(A,[A|L]) :- nodos(N), long(N,M), ciclo(A,[A|L],_), long(L,K), K = M.
+
+
+%--------FUNCIONES AUXILIARES-------
+nodos(L) :- nodos([],L).
+nodos(X,L) :- (arista(A,_,_) ; arista(_,A,_)),
+            not(member(A,X)),
+            nodos([A|X],L),!.
+nodos(X,L) :- L = X,!.
+
+/*4-Calcula la longitud de la lista*/
+long([],0):-!.
+long([_|Y],S):-long(Y,T),!, S is T + 1.
+
