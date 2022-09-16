@@ -3,31 +3,32 @@
 aristas(x,y,p) :- donde x es el nodo de inicio de la arista
                   y es el nodo final de la arista
                   p es el peso de la arista
+                  
+En caso de que quiera representar nodos aislados, lo puede hacer con el hecho
+para una arista de ese nodo a sí mismo, con peso 0
+arista(x,x,0).
 
 Por defecto, el programa trata al grafo como no dirigido. Para habilitarlo para
 grafos dirigidos, basta con comentar el segundo predicado de la regla "conexion"*/
 
-
-arista(a,b,4).
-arista(a,d,6).
-arista(a,g,7).
-arista(a,f,4).
-arista(b,d,9).
-arista(b,c,2).
-arista(c,d,6).
-arista(c,e,1).
-arista(c,f,4).
-arista(g,f,10).
-arista(f,e,3).
-
-
 /*
-arista(a,c,2).
-arista(a,e,3).
-arista(b,e,9).
-arista(d,b,8).
-arista(c,d,3).
+arista(a,b,10).
+arista(a,d,1).
+arista(b,c,10).
+arista(c,d,5).
+arista(c,e,8).
+arista(c,f,1).
+arista(d,e,6).
+arista(d,f,9).
 */
+
+arista(a,b,8).
+arista(a,c,4).
+arista(b,c,5).
+arista(c,d,7).
+arista(c,e,1).
+arista(d,e,9).
+arista(f,f,0).
 
 conexion(X,Y,Z) :- arista(X,Y,Z).
 conexion(X,Y,Z) :- arista(Y,X,Z). % <---- Comentar esta linea para grafos dirigidos
@@ -102,23 +103,47 @@ Entiéndase como circuito a una secuencia de nodos y aristas, que empieza y
 termina en el mismo nodo, y sus aristas no se pueden repetir.
 Un circuito puede interpretarse como un rastro cerrado.
 
-circuito(A,L,) :- A es el nodo de inicio y final,
+circuito(A,L,P) :- A es el nodo de inicio y final,
                  L es la lista que contiene el circuito,
                  P es el peso del circuito.*/
 circuito(A,[A|L],P) :- conexion(A,X,Z), rastro(X,A,L,[(A,X,Z)],Ps), P is Ps + Z.
 
 
-cHamiltoniano(A,[A|L]) :- nodos(N), long(N,M), ciclo(A,[A|L],_), long(L,K), K = M.
+/*Función para el Circuito Hamiltoniano
+Entiéndase como circuito Hamiltoniano aquel circuito que visita todos los nodos
+del grafo una vez y solo una vez. Este circuito coincide es también un ciclo
 
+circuitoHamiltoniano :- A es el nodo de inicio del circuito
+                        L es la lista que contiene el circuito*/
+circuitoHamiltoniano(A,[A|L]) :- nodos(N), long(N,M), ciclo(A,[A|L],_), long(L,K), K = M.
+
+
+/*Función para el Circuito Euleriano
+Entiéndase como Circuito Euleriano aquel circuito que visita todas las aristas
+del grafo una vez y solo una vez.
+
+circuitoEuleriano :- A es el nodo de inicio del circuito
+                        L es la lista que contiene el circuito*/
+circuitoEuleriano(A,[A|L]) :- aristas(R), long(R,M), circuito(A,[A|L],_), long(L,K), K = M.
 
 %--------FUNCIONES AUXILIARES-------
+
+/*Fnción que calcula la longitud de la lista. Cortesía de Alfredo Arabia*/
+long([],0):-!.
+long([_|Y],S):-long(Y,T),!, S is T + 1.
+
+
+/*Función que encuentra todos los nodos y los colecciona en una lista
+
+nodos(L) :- L es la lista que contiene todos los nodos del grafo*/
 nodos(L) :- nodos([],L).
 nodos(X,L) :- (arista(A,_,_) ; arista(_,A,_)),
             not(member(A,X)),
             nodos([A|X],L),!.
 nodos(X,L) :- L = X,!.
 
-/*4-Calcula la longitud de la lista*/
-long([],0):-!.
-long([_|Y],S):-long(Y,T),!, S is T + 1.
 
+/*Función que encuentra todas las aristas (no nulas) y las colecciona en una lista.
+
+aristas(L) :- L es la lista que contiene todas las aritas del grafo*/
+aristas(L) :- findall((A,B,P), (arista(A,B,P) , P \= 0), L). %Se aprovecha del predicado findall incluido en Prolog
