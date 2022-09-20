@@ -11,27 +11,27 @@ arista(x,x,0).
 Por defecto, el programa trata al grafo como no dirigido. Para habilitarlo para
 grafos dirigidos, basta con comentar el segundo predicado de la regla "conexion"*/
 
-/*
-arista(a,b,10).
-arista(a,d,1).
-arista(b,c,10).
-arista(c,d,5).
-arista(c,e,8).
-arista(c,f,1).
-arista(d,e,6).
-arista(d,f,9).
-*/
-
-arista(a,b,8).
-arista(a,c,4).
-arista(b,c,5).
-arista(c,d,7).
-arista(c,e,1).
-arista(d,e,9).
-arista(f,f,0).
+arista(a,b,9).
+arista(a,d,7).
+arista(c,a,5).
+arista(b,d,2).
+arista(d,c,9).
 
 conexion(X,Y,Z) :- arista(X,Y,Z).
 conexion(X,Y,Z) :- arista(Y,X,Z). % <---- Comentar esta linea para grafos dirigidos
+
+
+
+/*Funciones que determinan el grado de entrada y salida del nodo.
+gradoEntrada(A,N) :- A es el Nodo en cuestión,
+                     N es el número que representa su grado de entrada*/
+gradoEntrada(A,N) :- findall((B,A,P), (conexion(B,A,P) , not(conexion(A,A,0)) ), L), long(L,N).
+
+/*gradoSalida(A,N) :- A es el Nodo en cuestión,
+                     N es el número que representa su grado de entrada*/
+gradoSalida(A,N) :- findall((A,B,P), ( conexion(A,B,P) , not(conexion(A,A,0)) ), L), long(L,N).
+
+
 
 /*Función que determina a un sendero (walk) entre un nodo y otro.
 Entiéndase como sendero a una secuencia de nodos y aristas, en las que ambos se pueden repetir.
