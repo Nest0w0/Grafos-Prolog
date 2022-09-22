@@ -11,18 +11,19 @@ arista(x,x,0).
 Por defecto, el programa trata al grafo como no dirigido. Para habilitarlo para
 grafos dirigidos, basta con comentar el segundo predicado de la regla "conexion"*/
 
-arista(a,b,9).
-arista(a,d,7).
-arista(c,a,5).
-arista(b,d,2).
-arista(d,c,9).
+arista(a,c,9).
+arista(a,b,5).
+arista(b,e,4).
+arista(c,e,6).
+%arista(e,a,2).
+
 
 conexion(X,Y,Z) :- arista(X,Y,Z).
-conexion(X,Y,Z) :- arista(Y,X,Z). % <---- Comentar esta linea para grafos dirigidos
+%conexion(X,Y,Z) :- arista(Y,X,Z). % <---- Comentar esta linea para grafos dirigidos
 
 
 
-/*Funciones que determinan el grado de entrada y salida del nodo.
+/*Predicados para el grado de entrada y salida del nodo.
 gradoEntrada(A,N) :- A es el Nodo en cuestión,
                      N es el número que representa su grado de entrada*/
 gradoEntrada(A,N) :- findall((B,A,P), (conexion(B,A,P) , not(conexion(A,A,0)) ), L), long(L,N).
@@ -33,7 +34,7 @@ gradoSalida(A,N) :- findall((A,B,P), ( conexion(A,B,P) , not(conexion(A,A,0)) ),
 
 
 
-/*Función que determina a un sendero (walk) entre un nodo y otro.
+/*Predicado para un sendero (walk) entre un nodo y otro.
 Entiéndase como sendero a una secuencia de nodos y aristas, en las que ambos se pueden repetir.
 En un grafo no dirigido hay infinitos senderos.
 
@@ -57,7 +58,7 @@ sendero_cerrado(A,[A|L],P) :- conexion(A,X,Z) , sendero_abierto(X,A,L,Ps), P is 
 
 
 
-/*Función que determinar un camino (path) entre un nodo y otro.
+/*Predicado para un camino (path) entre un nodo y otro.
 Entiendase como camino a una secuencia de nodos y aristas, en las que ninguno de los dos se puedne repetir.
 En la literatura anglosajona, se les llama "Path".
 
@@ -71,7 +72,7 @@ camino(A,B,[A|L],V,P) :- not(member(A,V)),conexion(A,X,Z), camino(X,B,L,[A|V],Ps
 
 
 
-/*Función que determina un ciclo (cycle).
+/*Predicado para un ciclo (cycle).
 Entiéndase como ciclo a una secuencia de nodos y aristas, en las que ni nodos ni aristas se pueden repetir.
 La única excepción es el nodo de inicio y final, que deben el mismo en la secuencia.
 Un ciclo también puede interpretarse como un camino cerrado.
@@ -83,7 +84,7 @@ ciclo(A,[A|L],P) :- conexion(A,X,Z), camino(X,A,L,Ps), L \= [X,A], P is Ps + Z. 
 
 
 
-/*Función que determina un rastro (trail) entre un nodo y otro.
+/*Predicado para un rastro (trail) entre un nodo y otro.
 Entiéndase como rastro a una secuencia de nodos y aristas, en las que
 los nodos se pueden repetir pero las aristas no.
 
@@ -98,7 +99,7 @@ rastro(A,B,[A|L],V,P) :- conexion(A,X,Z), not(member((A,X,Z),V) ; member((X,A,Z)
 
 
 
-/*Función que determina un circuito (circuit).
+/*Predicado para un circuito (circuit).
 Entiéndase como circuito a una secuencia de nodos y aristas, que empieza y
 termina en el mismo nodo, y sus aristas no se pueden repetir.
 Un circuito puede interpretarse como un rastro cerrado.
@@ -109,7 +110,7 @@ circuito(A,L,P) :- A es el nodo de inicio y final,
 circuito(A,[A|L],P) :- conexion(A,X,Z), rastro(X,A,L,[(A,X,Z)],Ps), P is Ps + Z.
 
 
-/*Función para el Circuito Hamiltoniano
+/*Predicado para el Circuito Hamiltoniano
 Entiéndase como circuito Hamiltoniano aquel circuito que visita todos los nodos
 del grafo una vez y solo una vez. Este circuito coincide es también un ciclo
 
@@ -118,7 +119,7 @@ circuitoHamiltoniano :- A es el nodo de inicio del circuito
 circuitoHamiltoniano(A,[A|L]) :- nodos(N), long(N,M), ciclo(A,[A|L],_), long(L,K), K = M.
 
 
-/*Función para el Circuito Euleriano
+/*Predicado para el Circuito Euleriano
 Entiéndase como Circuito Euleriano aquel circuito que visita todas las aristas
 del grafo una vez y solo una vez.
 
@@ -127,17 +128,25 @@ circuitoEuleriano :- A es el nodo de inicio del circuito
 circuitoEuleriano(A,[A|L]) :- aristas(R), long(R,M), circuito(A,[A|L],_), long(L,K), K = M.
 
 
+/*Predicado para verificar si el grafo es conexo.
+Un grafo es conexo si existe al menos un camino desde cualquier nodo hasta cualquier otro nodo.*/
+conexo() :- nodos([H|T]) , conexo(H,[],T).
+conexo(A,[],[H|T]) :- hayCaminosDesde(A,[H|T]), conexo(H,[A],T).
+conexo(A,[H|T],[]) :- hayCaminosDesde(A,[H|T]).
+conexo(A,[H1|T1],[H2|T2]) :- hayCaminosDesde(A,[H1|T1]),
+                             hayCaminosDesde(A,[H2|T2]),
+                             conexo(H2,[H1,A|T1],T2).
 
 
 
 %--------FUNCIONES AUXILIARES-------
 
-/*Fnción que calcula la longitud de la lista. Cortesía de Alfredo Arabia*/
+/*Predicado para la longitud de una lista.Cortesía de Alfredo Arabia*/
 long([],0):-!.
 long([_|Y],S):-long(Y,T),!, S is T + 1.
 
 
-/*Función que encuentra todos los nodos y los colecciona en una lista
+/*Predicado para todos los nodos del grafo
 
 nodos(L) :- L es la lista que contiene todos los nodos del grafo*/
 nodos(L) :- nodos([],L).
@@ -147,7 +156,29 @@ nodos(X,L) :- (arista(A,_,_) ; arista(_,A,_)),
 nodos(X,L) :- L = X,!.
 
 
-/*Función que encuentra todas las aristas (no nulas) y las colecciona en una lista.
+/*Predicado para todos los nodos del grafo excepto uno.
+
+nodosExcepto(L,A) :- L es la lista que contiene los nodos,
+                     A es el nodo a excluir.*/
+nodosExcepto(L,A) :- nodosExcepto([],L,A).
+nodosExcepto(X,L,A) :- (arista(B,_,_) ; arista(_,B,_)),
+            A \= B,
+            not(member(B,X)),
+            nodosExcepto([B|X],L,A),!.
+nodosExcepto(X,L,_) :- L = X,!.
+
+
+/*Predicado para todas las aristas (no nulas).
 
 aristas(L) :- L es la lista que contiene todas las aritas del grafo*/
 aristas(L) :- findall((A,B,P), (arista(A,B,P) , P \= 0), L). %Se aprovecha del predicado findall incluido en Prolog
+
+
+
+/*Predicado para los caminos desde un nodo hacia cualquier otro nodo del grafo.
+
+hayCaminoDesde(A,L) :- A es el nodo desde el que se empiezan los caminos,
+                       L es la lista que contiene todos los otros nodos.*/
+hayCaminosDesde(A) :- nodos(L), hayCaminosDesde(A,L).
+hayCaminosDesde(_,[]).
+hayCaminosDesde(A,[H|T]) :- camino(A,H,_,_) , hayCaminosDesde(A,T).
